@@ -2,117 +2,243 @@
 
 A comprehensive WHMCS module that enables full integration with Proxmox VE clusters, allowing administrators to manage Proxmox API connections and customers to control their virtual machines.
 
-## Features
+**Version:** 1.0.2  
+**GitHub:** https://github.com/embire2/WHMCS-Proxmox-Manager  
+**Requirements:** WHMCS 8.0+, PHP 7.4+, Proxmox VE 6.0+
+
+## 🚀 Quick Start Guide
+
+### Step 1: Download the Plugin
+
+1. Download the latest release from: https://github.com/embire2/WHMCS-Proxmox-Manager/releases
+2. Extract the downloaded ZIP file to your computer
+
+### Step 2: Upload to WHMCS
+
+1. Connect to your server using FTP or File Manager
+2. Navigate to your WHMCS installation directory (usually `/home/username/public_html/` or `/var/www/html/`)
+3. Upload the `proxmoxvm` folder to:
+   ```
+   /path/to/your/whmcs/modules/servers/
+   ```
+   
+   **Example paths:**
+   - cPanel: `/home/username/public_html/modules/servers/`
+   - Plesk: `/var/www/vhosts/yourdomain.com/httpdocs/modules/servers/`
+   - Standard: `/var/www/html/modules/servers/`
+
+4. After upload, you should have this structure:
+   ```
+   modules/
+   └── servers/
+       └── proxmoxvm/
+           ├── proxmoxvm.php
+           ├── hooks.php
+           ├── README.md
+           ├── LICENSE
+           └── templates/
+               ├── clientarea.tpl
+               └── error.tpl
+   ```
+
+### Step 3: Set File Permissions
+
+Using your FTP client or File Manager, set the following permissions:
+
+1. Right-click on the `proxmoxvm` folder → Properties/Permissions → Set to `755`
+2. Right-click on all `.php` files → Properties/Permissions → Set to `644`
+3. Right-click on the `templates` folder → Properties/Permissions → Set to `755`
+4. Right-click on all `.tpl` files → Properties/Permissions → Set to `644`
+
+## 📋 Features
 
 ### Administrator Features
-- Configure multiple Proxmox servers/clusters
-- Set up API authentication details
-- Link customer accounts to specific nodes and VMs
-- Configure VM templates and resource limits
-- Monitor VM status and resource usage
-- Perform administrative actions (start, stop, restart, terminate)
+- ✅ Configure multiple Proxmox servers/clusters
+- ✅ Set up API authentication details
+- ✅ Link customer accounts to specific nodes and VMs
+- ✅ Configure VM templates and resource limits
+- ✅ Monitor VM status and resource usage
+- ✅ Perform administrative actions (start, stop, restart, terminate)
 
 ### Customer Features
-- View VM details and current status
-- Start, stop, and restart VMs
-- Access VM console via web interface
-- View assigned resources (CPU, RAM, disk, IP)
-- Secure password management
+- ✅ View VM details and current status
+- ✅ Start, stop, and restart VMs
+- ✅ Access VM console via web interface
+- ✅ View assigned resources (CPU, RAM, disk, IP)
+- ✅ Secure password management
 
-## Requirements
+## 🔧 Configuration Guide
 
-- WHMCS 8.0 or higher
-- PHP 7.4 or higher
-- Proxmox VE 6.0 or higher
-- SSL certificate on Proxmox server (self-signed is acceptable)
-- Proxmox API user with appropriate permissions
+### Step 1: Create Proxmox API User
 
-## Installation Instructions
-
-### Step 1: Upload Module Files
-
-1. Upload the entire `proxmoxvm` folder to your WHMCS installation:
-   ```
-   /path/to/whmcs/modules/servers/proxmoxvm/
-   ```
-
-2. Ensure proper file permissions:
+1. **Access your Proxmox server via SSH:**
    ```bash
-   chmod 755 /path/to/whmcs/modules/servers/proxmoxvm
-   chmod 644 /path/to/whmcs/modules/servers/proxmoxvm/*.php
-   chmod 755 /path/to/whmcs/modules/servers/proxmoxvm/templates
-   chmod 644 /path/to/whmcs/modules/servers/proxmoxvm/templates/*.tpl
+   ssh root@your-proxmox-server-ip
    ```
 
-### Step 2: Create Proxmox API User
-
-1. Log in to your Proxmox server via SSH
-2. Create a new user for WHMCS:
+2. **Create a dedicated user for WHMCS:**
    ```bash
    pveum user add whmcs@pve --password your-secure-password
    ```
+   
+   ⚠️ **Important:** Replace `your-secure-password` with a strong password!
 
-3. Create a role with necessary permissions:
+3. **Create a role with necessary permissions:**
    ```bash
    pveum role add WHMCS -privs "VM.Allocate VM.Clone VM.Config.CDROM VM.Config.CPU VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Console VM.Monitor VM.PowerMgmt VM.Audit Datastore.AllocateSpace Datastore.Audit Sys.Audit"
    ```
 
-4. Assign the role to the user:
+4. **Assign the role to the user:**
    ```bash
    pveum aclmod / -user whmcs@pve -role WHMCS
    ```
 
-### Step 3: Configure WHMCS Server
+### Step 2: Configure WHMCS Server
 
-1. Log in to WHMCS Admin Area
-2. Navigate to **Setup** → **Products/Services** → **Servers**
-3. Click **Add New Server**
-4. Fill in the server details:
-   - **Name**: Your Proxmox Server Name
-   - **Hostname**: Your Proxmox server IP or hostname
-   - **IP Address**: Your Proxmox server IP
-   - **Assigned IP Addresses**: (Optional) List of available IPs
-   - **Username**: `whmcs` (without @pve)
-   - **Password**: The password you set in Step 2
-   - **Type**: Select "Proxmox VM Management"
-   - **Secure**: Check this box (Proxmox uses HTTPS)
-   - **Port**: 8006 (default Proxmox port)
+1. **Log in to WHMCS Admin Area**
 
-5. Click **Save Changes**
+2. **Navigate to Server Configuration:**
+   - Go to `Setup` → `Products/Services` → `Servers`
+   - Click `Add New Server`
 
-### Step 4: Create Product
+3. **Fill in the server details:**
+   - **Name:** Give your server a friendly name (e.g., "Proxmox Server 1")
+   - **Hostname:** Your Proxmox server IP or domain (e.g., `192.168.1.100` or `proxmox.yourdomain.com`)
+   - **IP Address:** Same as hostname
+   - **Username:** `whmcs` (without @pve)
+   - **Password:** The password you created in Step 1
+   - **Type:** Select "Proxmox VM Management"
+   - **Secure:** ✅ Check this box (required)
+   - **Port:** `8006` (default Proxmox port)
 
-1. Navigate to **Setup** → **Products/Services** → **Products/Services**
-2. Click **Create a New Product**
-3. Configure the product:
-   - **Product Type**: Server/VPS
-   - **Product Name**: Your VM product name
-   - **Product Group**: Select or create a group
-   - **Module**: Select "Proxmox VM Management"
+4. **Click "Test Connection"** to verify settings
 
-4. Click **Continue**
+5. **Click "Save Changes"**
 
-5. In the **Module Settings** tab, configure:
-   - **Node**: The Proxmox node name (e.g., `pve1`)
-   - **VMID**: Leave empty for auto-assignment or specify a starting ID
-   - **OS Template**: Path to template (e.g., `local:vztmpl/debian-11-standard_11.3-1_amd64.tar.gz`)
-   - **CPU Cores**: Number of CPU cores
-   - **RAM (MB)**: Amount of RAM in megabytes
-   - **Disk Size (GB)**: Disk space in gigabytes
-   - **Bandwidth (MB)**: Network bandwidth limit
-   - **IP Address**: Static IP or "dhcp"
-   - **Gateway**: Gateway IP (if using static IP)
-   - **Netmask**: Network mask (e.g., 24)
+### Step 3: Create a Product
 
-6. Configure pricing and other options as needed
-7. Click **Save Changes**
+1. **Navigate to Product Setup:**
+   - Go to `Setup` → `Products/Services` → `Products/Services`
+   - Click `Create a New Product`
 
-### Step 5: Database Setup
+2. **Configure Basic Settings:**
+   - **Product Type:** Server/VPS
+   - **Product Name:** Enter a descriptive name (e.g., "Linux VPS Small")
+   - **Product Group:** Select or create a group
 
-The module will automatically create the required database table when the first VM is provisioned. The table structure is:
+3. **Click "Continue"**
+
+4. **Configure Module Settings:**
+   
+   In the **Module Settings** tab, configure:
+   
+   | Setting | Description | Example |
+   |---------|-------------|---------|
+   | **Module Name** | Select "Proxmox VM Management" | - |
+   | **Node** | Your Proxmox node name | `pve1` |
+   | **VMID** | Leave empty for auto-assignment | ` ` |
+   | **OS Template** | Path to your container template | `local:vztmpl/debian-11-standard_11.3-1_amd64.tar.gz` |
+   | **CPU Cores** | Number of CPU cores | `1` |
+   | **RAM (MB)** | Memory in megabytes | `1024` |
+   | **Disk Size (GB)** | Storage in gigabytes | `20` |
+   | **Bandwidth (MB)** | Network speed in MB/s | `100` |
+   | **IP Address** | Static IP or "dhcp" | `dhcp` |
+   | **Gateway** | Gateway IP (if static) | `192.168.1.1` |
+   | **Netmask** | Network mask | `24` |
+
+5. **Configure Pricing** in the Pricing tab
+
+6. **Click "Save Changes"**
+
+## 🎯 Usage Guide
+
+### For Administrators
+
+**Provisioning Process:**
+When a customer orders a VM, the module automatically:
+1. Creates a new container on the specified Proxmox node
+2. Assigns the configured resources
+3. Generates a secure root password
+4. Starts the VM
+5. Emails credentials to the customer
+
+**Management Actions:**
+- View VM status in client service details
+- Start/Stop/Restart VMs using action buttons
+- Suspend/Unsuspend accounts
+- Terminate VMs when needed
+
+### For Customers
+
+**Accessing VM Controls:**
+1. Log into the client area
+2. Go to "My Services"
+3. Click on your VM service
+4. Use the available action buttons
+
+**Available Actions:**
+- **Start VM** - Boot up a stopped VM
+- **Stop VM** - Gracefully shut down the VM
+- **Restart VM** - Reboot the VM
+- **Console** - Open web-based console access
+
+## 🔍 Troubleshooting
+
+### Common Issues and Solutions
+
+**1. Connection Failed Error**
+- ✅ Verify Proxmox server is accessible from WHMCS server
+- ✅ Check firewall allows port 8006
+- ✅ Ensure API credentials are correct
+- ✅ Verify SSL certificate (self-signed is OK)
+
+**2. VM Creation Failed**
+- ✅ Check the OS template exists on Proxmox
+- ✅ Verify sufficient resources on the node
+- ✅ Ensure API user has correct permissions
+- ✅ Check for VMID conflicts
+
+**3. Console Access Not Working**
+- ✅ Ensure noVNC is enabled on Proxmox
+- ✅ Check browser allows pop-ups
+- ✅ Verify network connectivity
+
+### Enable Debug Mode
+
+To troubleshoot issues:
+
+1. **Enable Module Debug Logging:**
+   - Go to `Setup` → `General Settings` → `Other`
+   - Enable "Module Debug Logging"
+   - Click "Save Changes"
+
+2. **View Debug Logs:**
+   - Go to `Utilities` → `Logs` → `Module Log`
+   - Look for entries related to "proxmoxvm"
+
+## 🔒 Security Best Practices
+
+1. **API Security:**
+   - Use strong passwords for API users
+   - Limit API access to WHMCS server IP only
+   - Regularly rotate API credentials
+
+2. **Network Security:**
+   - Use firewall rules to restrict access
+   - Enable HTTPS/SSL on both WHMCS and Proxmox
+   - Consider VPN for server-to-server communication
+
+3. **VM Security:**
+   - Use secure password generation
+   - Enable firewall on VMs
+   - Keep templates updated
+
+## 📊 Database Information
+
+The module creates a table `mod_proxmoxvm` to store VM information:
 
 ```sql
-CREATE TABLE `mod_proxmoxvm` (
+CREATE TABLE IF NOT EXISTS `mod_proxmoxvm` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `service_id` int(11) NOT NULL,
   `vmid` int(11) NOT NULL,
@@ -126,104 +252,52 @@ CREATE TABLE `mod_proxmoxvm` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-## Usage
+This table is created automatically when the first VM is provisioned.
 
-### For Administrators
+## 🆘 Getting Help
 
-1. **Provisioning**: When a new order is placed, the module will automatically:
-   - Create a new VM/container on the specified node
-   - Assign the configured resources
-   - Generate a secure root password
-   - Start the VM
-   - Store VM details in the database
+### Support Resources
 
-2. **Management**: From the admin area, you can:
-   - View VM status
-   - Start/Stop/Restart VMs
-   - Suspend/Unsuspend accounts
-   - Terminate VMs
+1. **Documentation:** This README file
+2. **GitHub Issues:** https://github.com/embire2/WHMCS-Proxmox-Manager/issues
+3. **WHMCS Community:** https://whmcs.community
 
-### For Customers
+### Before Requesting Support
 
-1. **Client Area**: Customers can access their VM details by:
-   - Logging into the client area
-   - Navigating to their service
-   - Viewing VM information and status
+Please provide:
+- WHMCS version
+- PHP version
+- Proxmox version
+- Error messages from Module Log
+- Steps to reproduce the issue
 
-2. **VM Controls**: Available actions:
-   - **Start VM**: Start a stopped VM
-   - **Stop VM**: Gracefully shut down the VM
-   - **Restart VM**: Reboot the VM
-   - **Open Console**: Access the VM console via web browser
+## 📄 License
 
-## Troubleshooting
+This module is released under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-### Common Issues
+## 🤝 Contributing
 
-1. **Connection Failed**
-   - Verify Proxmox server is accessible
-   - Check firewall rules (port 8006)
-   - Ensure API credentials are correct
-   - Check SSL certificate issues
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-2. **VM Creation Failed**
-   - Verify the OS template exists
-   - Check available resources on the node
-   - Ensure proper permissions for the API user
-   - Check VMID conflicts
+## 📝 Changelog
 
-3. **Console Access Issues**
-   - Ensure noVNC is enabled on Proxmox
-   - Check browser compatibility
-   - Verify network connectivity
+### Version 1.0.2 (2025-01-02)
+- Enhanced documentation with step-by-step installation guide
+- Added comprehensive troubleshooting section
+- Improved error handling and logging
+- Added support for custom VM hostnames
+- Fixed password encryption for better security
+- Updated file permission recommendations
 
-### Debug Mode
-
-To enable debug logging:
-
-1. Enable WHMCS Module Debug Logging:
-   - Go to **Setup** → **General Settings** → **Other**
-   - Enable "Module Debug Logging"
-
-2. Check logs at:
-   - **Utilities** → **Logs** → **Module Log**
-
-## Security Considerations
-
-1. **API Credentials**: Store securely and use strong passwords
-2. **Network Security**: Use firewall rules to restrict API access
-3. **SSL Certificates**: Always use HTTPS for API communication
-4. **Password Storage**: VM passwords are encrypted in the database
-5. **Permission Scope**: Limit API user permissions to minimum required
-
-## API Permissions Required
-
-The Proxmox API user needs the following minimum permissions:
-
-- VM.Allocate
-- VM.Clone
-- VM.Config.*
-- VM.Console
-- VM.Monitor
-- VM.PowerMgmt
-- VM.Audit
-- Datastore.AllocateSpace
-- Datastore.Audit
-- Sys.Audit
-
-## Support
-
-For issues or feature requests:
-1. Check the module logs for error details
-2. Verify all configuration settings
-3. Ensure Proxmox and WHMCS are up to date
-4. Contact your system administrator
-
-## License
-
-This module is provided under the MIT License. See LICENSE file for details.
-
-## Changelog
+### Version 1.0.1 (2025-01-01)
+- Fixed database table creation issue
+- Improved API error handling
+- Added connection test functionality
 
 ### Version 1.0.0 (2025-01-01)
 - Initial release
@@ -232,3 +306,7 @@ This module is provided under the MIT License. See LICENSE file for details.
 - Customer self-service portal
 - Admin management interface
 - Automatic provisioning and termination
+
+---
+
+**Made with ❤️ for the WHMCS community**

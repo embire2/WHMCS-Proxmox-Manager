@@ -6,7 +6,8 @@
  * @author     ProxmoxVM Plugin
  * @copyright  Copyright (c) 2025
  * @license    MIT License
- * @version    1.0.0
+ * @version    1.0.2
+ * @link       https://github.com/embire2/WHMCS-Proxmox-Manager
  */
 
 if (!defined("WHMCS")) {
@@ -112,7 +113,7 @@ class ProxmoxAPI
     private $ticket;
     private $CSRFPreventionToken;
     
-    public function __construct($hostname, $username, $password, $realm = 'pam', $port = 8006)
+    public function __construct($hostname, $username, $password, $realm = 'pve', $port = 8006)
     {
         $this->hostname = $hostname;
         $this->username = $username;
@@ -362,6 +363,20 @@ function proxmoxvm_CreateAccount($params)
         $result = $api->createContainer($node, $vmid, $config);
         
         if ($result) {
+            // Create table if not exists
+            if (!Capsule::schema()->hasTable('mod_proxmoxvm')) {
+                Capsule::schema()->create('mod_proxmoxvm', function ($table) {
+                    $table->increments('id');
+                    $table->integer('service_id')->unique();
+                    $table->integer('vmid');
+                    $table->string('node');
+                    $table->text('password');
+                    $table->timestamp('created_at')->useCurrent();
+                    $table->timestamp('updated_at')->nullable();
+                    $table->index('service_id', 'idx_service_id');
+                });
+            }
+            
             // Store VM details in database
             Capsule::table('mod_proxmoxvm')->insert([
                 'service_id' => $params['serviceid'],
