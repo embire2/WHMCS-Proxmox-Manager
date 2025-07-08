@@ -6,49 +6,234 @@ A comprehensive WHMCS module that enables full integration with Proxmox VE clust
 **GitHub:** https://github.com/embire2/WHMCS-Proxmox-Manager  
 **Requirements:** WHMCS 8.0+, PHP 7.4+, Proxmox VE 6.0+
 
-## 🚀 Quick Start Guide
+## 🚀 Installation Guide
 
-### Step 1: Download the Plugin
+### Step 1: Download and Install the Plugin
 
-1. Download the latest release from: https://github.com/embire2/WHMCS-Proxmox-Manager/releases
-2. Extract the downloaded ZIP file to your computer
+**Method 1: Using Git (Recommended)**
 
-### Step 2: Upload to WHMCS
-
-1. Connect to your server using FTP or File Manager
-2. Navigate to your WHMCS installation directory (usually `/home/username/public_html/` or `/var/www/html/`)
-3. Upload the `proxmoxvm` folder to:
-   ```
-   /path/to/your/whmcs/modules/servers/
+1. **Navigate to your WHMCS modules directory:**
+   ```bash
+   cd /path/to/your/whmcs/modules/servers/
    ```
    
-   **Example paths:**
-   - cPanel: `/home/username/public_html/modules/servers/`
-   - Plesk: `/var/www/vhosts/yourdomain.com/httpdocs/modules/servers/`
-   - Standard: `/var/www/html/modules/servers/`
+   **Common WHMCS paths:**
+   - cPanel: `cd /home/username/public_html/modules/servers/`
+   - Plesk: `cd /var/www/vhosts/yourdomain.com/httpdocs/modules/servers/`
+   - Standard: `cd /var/www/html/modules/servers/`
+   - Custom: `cd /var/www/whmcs/modules/servers/`
 
-4. After upload, you should have this structure:
-   ```
-   modules/
-   └── servers/
-       └── proxmoxvm/
-           ├── proxmoxvm.php
-           ├── hooks.php
-           ├── README.md
-           ├── LICENSE
-           └── templates/
-               ├── clientarea.tpl
-               └── error.tpl
+2. **Clone the repository:**
+   ```bash
+   git clone https://github.com/embire2/WHMCS-Proxmox-Manager.git proxmoxvm
    ```
 
-### Step 3: Set File Permissions
+3. **Set proper file permissions:**
+   ```bash
+   chmod -R 755 proxmoxvm/
+   chmod 644 proxmoxvm/*.php
+   chmod 644 proxmoxvm/templates/*.tpl
+   ```
 
-Using your FTP client or File Manager, set the following permissions:
+4. **Verify installation:**
+   ```bash
+   ls -la proxmoxvm/
+   ```
+   
+   You should see:
+   ```
+   drwxr-xr-x  3 www-data www-data  4096 Jan  2 12:00 .
+   drwxr-xr-x 15 www-data www-data  4096 Jan  2 12:00 ..
+   -rw-r--r--  1 www-data www-data  1234 Jan  2 12:00 CHANGELOG.md
+   -rw-r--r--  1 www-data www-data  1067 Jan  2 12:00 LICENSE
+   -rw-r--r--  1 www-data www-data 12345 Jan  2 12:00 README.md
+   -rw-r--r--  1 www-data www-data  2345 Jan  2 12:00 hooks.php
+   -rw-r--r--  1 www-data www-data 23456 Jan  2 12:00 proxmoxvm.php
+   drwxr-xr-x  2 www-data www-data  4096 Jan  2 12:00 templates
+   ```
 
-1. Right-click on the `proxmoxvm` folder → Properties/Permissions → Set to `755`
-2. Right-click on all `.php` files → Properties/Permissions → Set to `644`
-3. Right-click on the `templates` folder → Properties/Permissions → Set to `755`
-4. Right-click on all `.tpl` files → Properties/Permissions → Set to `644`
+**Method 2: Manual Download**
+
+1. **Download the latest release:**
+   ```bash
+   cd /tmp
+   wget https://github.com/embire2/WHMCS-Proxmox-Manager/archive/refs/heads/main.zip
+   ```
+
+2. **Extract and move to WHMCS:**
+   ```bash
+   unzip main.zip
+   mv WHMCS-Proxmox-Manager-main /path/to/your/whmcs/modules/servers/proxmoxvm
+   ```
+
+3. **Set permissions:**
+   ```bash
+   cd /path/to/your/whmcs/modules/servers/
+   chmod -R 755 proxmoxvm/
+   chmod 644 proxmoxvm/*.php
+   chmod 644 proxmoxvm/templates/*.tpl
+   ```
+
+4. **Clean up:**
+   ```bash
+   rm /tmp/main.zip
+   ```
+
+### Step 2: Verify WHMCS File Structure
+
+After installation, verify the correct structure:
+
+```bash
+cd /path/to/your/whmcs/modules/servers/proxmoxvm
+tree
+```
+
+Expected structure:
+```
+proxmoxvm/
+├── CHANGELOG.md
+├── LICENSE
+├── README.md
+├── hooks.php
+├── proxmoxvm.php
+└── templates/
+    ├── clientarea.tpl
+    └── error.tpl
+```
+
+### Step 3: Set Ownership (if needed)
+
+If your web server runs under a different user:
+
+```bash
+# For Apache (www-data)
+sudo chown -R www-data:www-data /path/to/your/whmcs/modules/servers/proxmoxvm
+
+# For Nginx (nginx)
+sudo chown -R nginx:nginx /path/to/your/whmcs/modules/servers/proxmoxvm
+
+# For cPanel (username)
+sudo chown -R username:username /home/username/public_html/modules/servers/proxmoxvm
+```
+
+## 🔧 WHMCS Activation Guide
+
+### Step 1: Create Proxmox API User
+
+Before configuring WHMCS, create a dedicated API user on your Proxmox server:
+
+1. **SSH into your Proxmox server:**
+   ```bash
+   ssh root@your-proxmox-server-ip
+   ```
+
+2. **Create WHMCS user:**
+   ```bash
+   pveum user add whmcs@pve --password "YourSecurePassword123!"
+   ```
+
+3. **Create role with required permissions:**
+   ```bash
+   pveum role add WHMCS -privs "VM.Allocate VM.Clone VM.Config.CDROM VM.Config.CPU VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Console VM.Monitor VM.PowerMgmt VM.Audit Datastore.AllocateSpace Datastore.Audit Sys.Audit"
+   ```
+
+4. **Assign role to user:**
+   ```bash
+   pveum aclmod / -user whmcs@pve -role WHMCS
+   ```
+
+5. **Verify user creation:**
+   ```bash
+   pveum user list
+   pveum acl list
+   ```
+
+### Step 2: Configure WHMCS Server
+
+1. **Access WHMCS Admin Area:**
+   - Open your browser and go to: `https://yourdomain.com/admin/`
+   - Log in with your admin credentials
+
+2. **Navigate to Server Management:**
+   - Go to: `Setup` → `Products/Services` → `Servers`
+   - Click: `Add New Server`
+
+3. **Configure Server Settings:**
+
+   | Field | Value | Example |
+   |-------|-------|---------|
+   | **Name** | Friendly server name | `Proxmox Server 1` |
+   | **Hostname** | Proxmox server IP/domain | `192.168.1.100` or `proxmox.example.com` |
+   | **IP Address** | Same as hostname | `192.168.1.100` |
+   | **Username** | API username (without @pve) | `whmcs` |
+   | **Password** | API user password | `YourSecurePassword123!` |
+   | **Type** | Select from dropdown | `Proxmox VM Management` |
+   | **Secure** | ✅ Enable SSL | `Checked` |
+   | **Port** | Proxmox web port | `8006` |
+   | **Max Accounts** | Leave empty for unlimited | ` ` |
+
+4. **Test Connection:**
+   - Click `Test Connection` button
+   - You should see: "Connection Successful"
+   - If failed, check firewall and credentials
+
+5. **Save Configuration:**
+   - Click `Save Changes`
+
+### Step 3: Create VM Product
+
+1. **Navigate to Products:**
+   - Go to: `Setup` → `Products/Services` → `Products/Services`
+   - Click: `Create a New Product`
+
+2. **Basic Product Configuration:**
+   - **Product Type:** `Server/VPS`
+   - **Product Name:** `Linux VPS - Small`
+   - **Product Group:** Select existing or create new
+   - **Hidden:** Leave unchecked
+   - Click `Continue`
+
+3. **Configure Module Settings Tab:**
+
+   | Setting | Description | Example Value |
+   |---------|-------------|---------------|
+   | **Module Name** | Select from dropdown | `Proxmox VM Management` |
+   | **Server Group** | Select your Proxmox server | `Proxmox Server 1` |
+   | **Node** | Proxmox node name | `pve1` |
+   | **VMID** | Leave empty for auto | ` ` |
+   | **OS Template** | Container template path | `local:vztmpl/debian-11-standard_11.3-1_amd64.tar.gz` |
+   | **CPU Cores** | Number of cores | `1` |
+   | **RAM (MB)** | Memory in MB | `1024` |
+   | **Disk Size (GB)** | Storage in GB | `20` |
+   | **Bandwidth (MB)** | Network speed | `100` |
+   | **IP Address** | IP or "dhcp" | `dhcp` |
+   | **Gateway** | Gateway IP (if static) | `192.168.1.1` |
+   | **Netmask** | Network mask | `24` |
+
+4. **Configure Pricing:**
+   - Go to `Pricing` tab
+   - Set your desired pricing structure
+   - Configure billing cycles
+
+5. **Save Product:**
+   - Click `Save Changes`
+
+### Step 4: Verify Installation
+
+1. **Check Module Status:**
+   ```bash
+   # Check if module files are readable by web server
+   sudo -u www-data php -l /path/to/your/whmcs/modules/servers/proxmoxvm/proxmoxvm.php
+   ```
+
+2. **Check WHMCS Logs:**
+   - In WHMCS Admin: `Utilities` → `Logs` → `Module Log`
+   - Look for any "proxmoxvm" entries
+
+3. **Test VM Creation:**
+   - Create a test order for your new product
+   - Check if VM is created in Proxmox
+   - Verify customer can access VM controls
 
 ## 📋 Features
 
@@ -66,89 +251,6 @@ Using your FTP client or File Manager, set the following permissions:
 - ✅ Access VM console via web interface
 - ✅ View assigned resources (CPU, RAM, disk, IP)
 - ✅ Secure password management
-
-## 🔧 Configuration Guide
-
-### Step 1: Create Proxmox API User
-
-1. **Access your Proxmox server via SSH:**
-   ```bash
-   ssh root@your-proxmox-server-ip
-   ```
-
-2. **Create a dedicated user for WHMCS:**
-   ```bash
-   pveum user add whmcs@pve --password your-secure-password
-   ```
-   
-   ⚠️ **Important:** Replace `your-secure-password` with a strong password!
-
-3. **Create a role with necessary permissions:**
-   ```bash
-   pveum role add WHMCS -privs "VM.Allocate VM.Clone VM.Config.CDROM VM.Config.CPU VM.Config.Disk VM.Config.HWType VM.Config.Memory VM.Config.Network VM.Config.Options VM.Console VM.Monitor VM.PowerMgmt VM.Audit Datastore.AllocateSpace Datastore.Audit Sys.Audit"
-   ```
-
-4. **Assign the role to the user:**
-   ```bash
-   pveum aclmod / -user whmcs@pve -role WHMCS
-   ```
-
-### Step 2: Configure WHMCS Server
-
-1. **Log in to WHMCS Admin Area**
-
-2. **Navigate to Server Configuration:**
-   - Go to `Setup` → `Products/Services` → `Servers`
-   - Click `Add New Server`
-
-3. **Fill in the server details:**
-   - **Name:** Give your server a friendly name (e.g., "Proxmox Server 1")
-   - **Hostname:** Your Proxmox server IP or domain (e.g., `192.168.1.100` or `proxmox.yourdomain.com`)
-   - **IP Address:** Same as hostname
-   - **Username:** `whmcs` (without @pve)
-   - **Password:** The password you created in Step 1
-   - **Type:** Select "Proxmox VM Management"
-   - **Secure:** ✅ Check this box (required)
-   - **Port:** `8006` (default Proxmox port)
-
-4. **Click "Test Connection"** to verify settings
-
-5. **Click "Save Changes"**
-
-### Step 3: Create a Product
-
-1. **Navigate to Product Setup:**
-   - Go to `Setup` → `Products/Services` → `Products/Services`
-   - Click `Create a New Product`
-
-2. **Configure Basic Settings:**
-   - **Product Type:** Server/VPS
-   - **Product Name:** Enter a descriptive name (e.g., "Linux VPS Small")
-   - **Product Group:** Select or create a group
-
-3. **Click "Continue"**
-
-4. **Configure Module Settings:**
-   
-   In the **Module Settings** tab, configure:
-   
-   | Setting | Description | Example |
-   |---------|-------------|---------|
-   | **Module Name** | Select "Proxmox VM Management" | - |
-   | **Node** | Your Proxmox node name | `pve1` |
-   | **VMID** | Leave empty for auto-assignment | ` ` |
-   | **OS Template** | Path to your container template | `local:vztmpl/debian-11-standard_11.3-1_amd64.tar.gz` |
-   | **CPU Cores** | Number of CPU cores | `1` |
-   | **RAM (MB)** | Memory in megabytes | `1024` |
-   | **Disk Size (GB)** | Storage in gigabytes | `20` |
-   | **Bandwidth (MB)** | Network speed in MB/s | `100` |
-   | **IP Address** | Static IP or "dhcp" | `dhcp` |
-   | **Gateway** | Gateway IP (if static) | `192.168.1.1` |
-   | **Netmask** | Network mask | `24` |
-
-5. **Configure Pricing** in the Pricing tab
-
-6. **Click "Save Changes"**
 
 ## 🎯 Usage Guide
 
@@ -184,54 +286,83 @@ When a customer orders a VM, the module automatically:
 
 ## 🔍 Troubleshooting
 
-### Common Issues and Solutions
+### Common Installation Issues
 
-**1. Connection Failed Error**
-- ✅ Verify Proxmox server is accessible from WHMCS server
-- ✅ Check firewall allows port 8006
-- ✅ Ensure API credentials are correct
-- ✅ Verify SSL certificate (self-signed is OK)
+**1. Module Not Appearing in WHMCS**
+```bash
+# Check file permissions
+ls -la /path/to/your/whmcs/modules/servers/proxmoxvm/
+# Should show 755 for directories, 644 for files
 
-**2. VM Creation Failed**
-- ✅ Check the OS template exists on Proxmox
-- ✅ Verify sufficient resources on the node
-- ✅ Ensure API user has correct permissions
-- ✅ Check for VMID conflicts
+# Check file ownership
+ls -la /path/to/your/whmcs/modules/servers/
+# Should be owned by web server user (www-data, nginx, etc.)
+```
 
-**3. Console Access Not Working**
-- ✅ Ensure noVNC is enabled on Proxmox
-- ✅ Check browser allows pop-ups
-- ✅ Verify network connectivity
+**2. Permission Denied Errors**
+```bash
+# Fix ownership
+sudo chown -R www-data:www-data /path/to/your/whmcs/modules/servers/proxmoxvm/
+
+# Fix permissions
+sudo chmod -R 755 /path/to/your/whmcs/modules/servers/proxmoxvm/
+sudo chmod 644 /path/to/your/whmcs/modules/servers/proxmoxvm/*.php
+```
+
+**3. Connection Failed Error**
+```bash
+# Test Proxmox connectivity
+curl -k https://your-proxmox-ip:8006/api2/json/version
+
+# Check firewall
+sudo ufw status
+sudo iptables -L
+
+# Test from WHMCS server
+telnet your-proxmox-ip 8006
+```
 
 ### Enable Debug Mode
 
-To troubleshoot issues:
-
 1. **Enable Module Debug Logging:**
-   - Go to `Setup` → `General Settings` → `Other`
+   - WHMCS Admin → `Setup` → `General Settings` → `Other`
    - Enable "Module Debug Logging"
    - Click "Save Changes"
 
 2. **View Debug Logs:**
-   - Go to `Utilities` → `Logs` → `Module Log`
-   - Look for entries related to "proxmoxvm"
+   ```bash
+   # Check WHMCS activity log
+   tail -f /path/to/your/whmcs/storage/logs/activity.log | grep proxmoxvm
+   
+   # Or via WHMCS Admin
+   # Utilities → Logs → Module Log
+   ```
 
 ## 🔒 Security Best Practices
 
-1. **API Security:**
-   - Use strong passwords for API users
-   - Limit API access to WHMCS server IP only
-   - Regularly rotate API credentials
+### Server Security
+```bash
+# Restrict API access to WHMCS server IP only
+# Add to Proxmox firewall rules
+pve-firewall localnet add 192.168.1.0/24 -comment "WHMCS Network"
 
-2. **Network Security:**
-   - Use firewall rules to restrict access
-   - Enable HTTPS/SSL on both WHMCS and Proxmox
-   - Consider VPN for server-to-server communication
+# Enable fail2ban for additional protection
+sudo apt install fail2ban
+sudo systemctl enable fail2ban
+```
 
-3. **VM Security:**
-   - Use secure password generation
-   - Enable firewall on VMs
-   - Keep templates updated
+### File Security
+```bash
+# Secure configuration files
+chmod 600 /path/to/your/whmcs/configuration.php
+
+# Regular security updates
+sudo apt update && sudo apt upgrade
+
+# Monitor file changes
+sudo apt install aide
+sudo aide --init
+```
 
 ## 📊 Database Information
 
@@ -252,7 +383,29 @@ CREATE TABLE IF NOT EXISTS `mod_proxmoxvm` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-This table is created automatically when the first VM is provisioned.
+**Check database table:**
+```bash
+mysql -u whmcs_user -p whmcs_database -e "DESCRIBE mod_proxmoxvm;"
+```
+
+## 🔄 Updating the Plugin
+
+### Using Git
+```bash
+cd /path/to/your/whmcs/modules/servers/proxmoxvm
+git pull origin main
+chmod -R 755 .
+chmod 644 *.php templates/*.tpl
+```
+
+### Manual Update
+```bash
+cd /tmp
+wget https://github.com/embire2/WHMCS-Proxmox-Manager/archive/refs/heads/main.zip
+unzip main.zip
+cp -r WHMCS-Proxmox-Manager-main/* /path/to/your/whmcs/modules/servers/proxmoxvm/
+rm -rf WHMCS-Proxmox-Manager-main main.zip
+```
 
 ## 🆘 Getting Help
 
@@ -265,11 +418,25 @@ This table is created automatically when the first VM is provisioned.
 ### Before Requesting Support
 
 Please provide:
-- WHMCS version
-- PHP version
-- Proxmox version
+- WHMCS version: `php -v` and check Admin → System Health
+- PHP version: `php -v`
+- Proxmox version: `pveversion`
 - Error messages from Module Log
-- Steps to reproduce the issue
+- Output of: `ls -la /path/to/your/whmcs/modules/servers/proxmoxvm/`
+
+### Collect Debug Information
+```bash
+# System information
+uname -a
+php -v
+mysql --version
+
+# WHMCS permissions
+ls -la /path/to/your/whmcs/modules/servers/proxmoxvm/
+
+# Recent logs
+tail -n 50 /path/to/your/whmcs/storage/logs/activity.log
+```
 
 ## 📄 License
 
@@ -278,21 +445,38 @@ This module is released under the MIT License. See the [LICENSE](LICENSE) file f
 ## 🤝 Contributing
 
 Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+
+1. **Fork and clone:**
+   ```bash
+   git clone https://github.com/yourusername/WHMCS-Proxmox-Manager.git
+   cd WHMCS-Proxmox-Manager
+   ```
+
+2. **Create feature branch:**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+3. **Make changes and commit:**
+   ```bash
+   git add .
+   git commit -m "Add your feature description"
+   ```
+
+4. **Push and create PR:**
+   ```bash
+   git push origin feature/your-feature-name
+   ```
 
 ## 📝 Changelog
 
 ### Version 1.0.2 (2025-01-02)
-- Enhanced documentation with step-by-step installation guide
-- Added comprehensive troubleshooting section
-- Improved error handling and logging
-- Added support for custom VM hostnames
-- Fixed password encryption for better security
-- Updated file permission recommendations
+- Added comprehensive Linux command-line installation guide
+- Included Git clone instructions for easy installation
+- Added WHMCS activation steps with detailed configuration
+- Enhanced troubleshooting section with CLI commands
+- Improved security recommendations with command examples
+- Added update procedures using Git and manual methods
 
 ### Version 1.0.1 (2025-01-01)
 - Fixed database table creation issue
@@ -310,3 +494,8 @@ Contributions are welcome! Please:
 ---
 
 **Made with ❤️ for the WHMCS community**
+
+**Quick Install Command:**
+```bash
+cd /path/to/your/whmcs/modules/servers/ && git clone https://github.com/embire2/WHMCS-Proxmox-Manager.git proxmoxvm && chmod -R 755 proxmoxvm/ && chmod 644 proxmoxvm/*.php proxmoxvm/templates/*.tpl
+```
